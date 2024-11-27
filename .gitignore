@@ -1,0 +1,43 @@
+# Node.js dependencies
+node_modules/
+
+# Electron build outputs
+dist/
+out/
+release/
+build/
+
+# Electron specific files
+*.asar
+*.app
+*.dmg
+*.exe
+*.tar.gz
+
+# OS specific files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE or Editor folders
+.vscode/
+.idea/
+
+# System files
+*.swp
+*.swo
+
+# Optional: if you're using Docker
+.docker/
+
+# Optional: if you're using the TypeScript definition files
+*.d.ts
+
+# Optional: if you're using Jest for testing
+coverage/
+
