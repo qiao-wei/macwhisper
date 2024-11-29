@@ -9,6 +9,7 @@ import { LLMService } from './services/llm-service'
 import { LLMTranslateService } from './services/impl/llm-translate-service'
 import { TranslateService } from './services/translate-service'
 import ffmpeg from 'fluent-ffmpeg'
+import { spawn } from 'child_process'
 
 // let transcriptionProcess: any = null
 let asrService: ASRService | undefined = undefined
@@ -123,6 +124,7 @@ app.whenReady().then(() => {
     if (asrService) {
       return;
     }
+
     asrService = new WhisperASRService(modelSize);
 
     // // Listen for a 'stop-transcription' event to terminate the process

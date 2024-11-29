@@ -5,7 +5,7 @@ import { ASRRequest, ASRService } from "../asr-service";
 
 export class WhisperASRService implements ASRService {
   private modelSize : string = "tiny";
-  private process;
+  private subProcess;
 
   constructor(modelSize:string){
     this.modelSize = modelSize;
@@ -18,7 +18,7 @@ export class WhisperASRService implements ASRService {
     onError: (error: string) => void,
     onClose: (code: number) => void,
   ) : void {
-    if(this.process){
+    if(this.subProcess){
       onError("进程在处理中，请等待结束")
       return
     }
@@ -32,26 +32,26 @@ export class WhisperASRService implements ASRService {
       '-l', request.language || '',
       '-f', request.audioFile || ''
     ];
-    this.process = spawn(executablePath, args);
+    this.subProcess = spawn(executablePath, args);
 
-    this.process.stdout.on('data', (data) => {
+    this.subProcess.stdout.on('data', (data) => {
       const output = data.toString();
-      console.log(output);
+      console.log('out:' + output);
       // onData(output)
     });
 
-    this.process.stderr.on('data', (data) => {
+    this.subProcess.stderr.on('data', (data) => {
       console.error(data.toString());
       // onError(data.toString())
     });
 
-    this.process.on('close', (code) => {
-      this.process = undefined;
+    this.subProcess.on('close', (code) => {
+      this.subProcess = undefined;
       console.log(`Process closed with code ${code}`);
       // onClose(code)
     });
 
-    this.process.on('exit', (code) => {
+    this.subProcess.on('exit', (code) => {
       console.log(`Process exit with code ${code}`);
     });
   }
@@ -59,8 +59,8 @@ export class WhisperASRService implements ASRService {
   // 可选：停止正在进行的语音识别任务
   stopTranscription(): void {
     // 方法体可在此处实现
-    if(this.process){
-      this.process.kill();
+    if(this.subProcess){
+      this.subProcess.kill();
     }
   }
 
