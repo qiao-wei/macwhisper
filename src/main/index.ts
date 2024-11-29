@@ -1,13 +1,14 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
+import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { WhisperASRService } from './services/impl/whisper-asr-service'
-import { ASRError, ASRService } from './services/asr-service'
+import { ASRService } from './services/asr-service'
 import { LikeOpenAIService } from './services/impl/like-openai-llm-service'
 import { LLMService } from './services/llm-service'
 import { LLMTranslateService } from './services/impl/llm-translate-service'
 import { TranslateService } from './services/translate-service'
+import ffmpeg from 'fluent-ffmpeg'
 
 // let transcriptionProcess: any = null
 let asrService: ASRService | undefined = undefined
@@ -56,6 +57,12 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  const ffmpegPath = is.dev
+    ? path.join(__dirname, '../../resources/tools/ffmpeg')
+    : path.join(process.resourcesPath, 'tools/ffmpeg');
+
+  ffmpeg.setFfmpegPath(ffmpegPath)
+
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -103,6 +110,15 @@ app.whenReady().then(() => {
     // console.log('Received message:', audioFile);
     // console.log('Received details:', language);
     // console.log('Received details:', isUseGPU);
+    console.log('开始分离音视频:', audioFile);
+    ffmpeg(audioFile)
+      .noVideo()  // 移除视频流，提取音频
+      .audioCodec('pcm_s16le')  // 设置音频编码为 16 位 PCM
+      .audioFrequency(16000)  // 设置音频采样率为 16k
+      .save('/tmp/output_audio.wav')  // 输出音频文件
+
+    audioFile = '/tmp/output_audio.wav'
+    console.log('开始提取字幕:', audioFile);
     const win = BrowserWindow.fromWebContents(event.sender);
     if (asrService) {
       return;
@@ -124,8 +140,8 @@ app.whenReady().then(() => {
         win?.webContents.send('on-transcribing', result);
       }
     }
-    const onError = (error: ASRError) => {
-      console.error('Error:', error);
+    const onError = (error: string) => {
+      console.error(error);
     }
     const onClose = (code: number) => {
       console.log(`Process exited with code ${code}`);

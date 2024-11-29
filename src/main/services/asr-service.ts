@@ -1,12 +1,3 @@
-// 定义 ASR 结果的接口
-export type ASRData = string
-
-// 定义 ASR 错误的接口
-export interface ASRError {
-  code: number; // 错误码
-  message: string; // 错误信息
-}
-
 // 定义 ASR 请求的接口
 export interface ASRRequest {
   audioFile: string; // 输入音频文件
@@ -18,7 +9,7 @@ export interface ASRRequest {
 export interface ASRService {
   // 语音识别函数，接收请求并返回识别结果或错误
   // transcribe(request: ASRRequest): Promise<ASRResult | ASRError>;
-  transcribe(request: ASRRequest, onData: (result: ASRData) => void,onError: (error: ASRError) => void,onClose: (code: number) => void): void;
+  transcribe(request: ASRRequest, onData: (result: string) => void,onError: (error: string) => void,onClose: (code: number) => void): void;
 
   // 可选：停止正在进行的语音识别任务
   stopTranscription(): void;

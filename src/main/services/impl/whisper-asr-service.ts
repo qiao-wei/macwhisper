@@ -1,7 +1,7 @@
 import { is } from "@electron-toolkit/utils";
 import { spawn } from "child_process";
 import path from "path";
-import { ASRData, ASRError, ASRRequest, ASRService } from "../asr-service";
+import { ASRRequest, ASRService } from "../asr-service";
 
 export class WhisperASRService implements ASRService {
   private modelSize : string = "tiny";
@@ -14,12 +14,12 @@ export class WhisperASRService implements ASRService {
   // async transcribe(request: ASRRequest): Promise<ASRResult | ASRError> {
   transcribe(
     request: ASRRequest, 
-    onData: (result: ASRData) => void,
-    onError: (error: ASRError) => void,
+    onData: (result: string) => void,
+    onError: (error: string) => void,
     onClose: (code: number) => void,
   ) : void {
     if(this.process){
-      onError({code:1,message:"进程在处理中，请等待结束"})
+      onError("进程在处理中，请等待结束")
       return
     }
     // modelSize = "tiny";
@@ -36,18 +36,23 @@ export class WhisperASRService implements ASRService {
 
     this.process.stdout.on('data', (data) => {
       const output = data.toString();
-      // console.log('stdout:', output);
-      onData(output)
+      console.log(output);
+      // onData(output)
     });
 
     this.process.stderr.on('data', (data) => {
-      onError({code:1,message:data.toString()})
+      console.error(data.toString());
+      // onError(data.toString())
     });
 
-    process.stderr.on('close', (code) => {
-      // console.log(`Process exited with code ${code}`);
+    this.process.on('close', (code) => {
       this.process = undefined;
-      onClose(code)
+      console.log(`Process closed with code ${code}`);
+      // onClose(code)
+    });
+
+    this.process.on('exit', (code) => {
+      console.log(`Process exit with code ${code}`);
     });
   }
 

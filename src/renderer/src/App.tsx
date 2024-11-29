@@ -1,32 +1,25 @@
 import Versions from './components/Versions'
 import electronLogo from './assets/electron.svg'
 import { useState } from 'react'
+import VideoUpload from './components/video-upload';
 
 function App(): JSX.Element {
   const [transcriptions, setTranscriptions] = useState<string[]>([])
 
   // const audioFile = "/Users/qiaowei/Downloads/macwhisper/code/resources/tools/output.wav";
-  const audioFile = "/Users/qw/Desktop/macwhisper/wav/output.wav";
-  const whisperHandle = (): void => {
-    window.electron.ipcRenderer.send(
-      'transcribe-audio',
-      {
-        modelSize: 'tiny',
-        audioFile: audioFile,
-        language: 'auto',
-        isUseGPU: false
-      }
-    )
-  }
+  // const audioFile = "/Users/qw/Desktop/macwhisper/wav/output.wav";
+  // const whisperHandle = (): void => {
+  //   window.electron.ipcRenderer.send(
+  //     'transcribe-audio',
+  //     {
+  //       modelSize: 'tiny',
+  //       audioFile: audioFile,
+  //       language: 'auto',
+  //       isUseGPU: false
+  //     }
+  //   )
+  // }
 
-  window.electron.ipcRenderer.on('on-transcribing', (_event, value) => {
-    console.log('value:', value)
-    if (value === "end") {
-      console.log("end")
-      return;
-    }
-    setTranscriptions((prevTranscriptions) => [...prevTranscriptions, value])
-  })
 
   const stopWhisperHandle = (): void => {
     window.electron.ipcRenderer.send('stop-transcription')
@@ -47,9 +40,44 @@ function App(): JSX.Element {
     // setTranscriptions((prevTranscriptions) => [...prevTranscriptions, value])
   })
 
+  window.electron.ipcRenderer.on('on-transcribing', (_event, value) => {
+    console.log('value:', value)
+    if (value === "end") {
+      console.log("end")
+      return;
+    }
+    setTranscriptions((prevTranscriptions) => [...prevTranscriptions, value])
+  })
+
+  function handleUpload(file: File): void {
+    console.log('file:', file)
+    // throw new Error('Function not implemented.');
+    const audioFile = file.path
+    window.electron.ipcRenderer.send(
+      'transcribe-audio',
+      {
+        modelSize: 'tiny',
+        audioFile: audioFile,
+        language: 'auto',
+        isUseGPU: false
+      }
+    )
+  }
+
+  function handleClear(): void {
+    // throw new Error('Function not implemented.');
+  }
+
   return (
     <>
-      <img alt="logo" className="logo" src={electronLogo} />
+      <VideoUpload onUpload={handleUpload} onClear={handleClear} />
+      <div className="transcriptions">
+        {transcriptions.map((transcription, index) => (
+          <p key={index}>{transcription}</p>
+        ))}
+      </div>
+
+      {/* <img alt="logo" className="logo" src={electronLogo} />
       <div className="creator">Powered by electron-vite</div>
       <div className="text">
         Build an Electron app with <span className="react">React</span>
@@ -59,11 +87,11 @@ function App(): JSX.Element {
         Please try pressing <code>F12</code> to open the devTool
       </p>
       <div className="actions">
-        {/* <div className="action">
+        <div className="action">
           <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
             Documentation
           </a>
-        </div> */}
+        </div>
         <div className="action">
           <a target="_blank" rel="noreferrer" onClick={whisperHandle}>
             whisper
@@ -80,12 +108,7 @@ function App(): JSX.Element {
           </a>
         </div>
       </div>
-      <div className="transcriptions">
-        {transcriptions.map((transcription, index) => (
-          <p key={index}>{transcription}</p>
-        ))}
-      </div>
-      <Versions></Versions>
+      <Versions></Versions> */}
     </>
   )
 }
