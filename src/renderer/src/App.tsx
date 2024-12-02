@@ -18,18 +18,6 @@ function App(): JSX.Element {
       subtitleEditorRef.current.clearAllSubtitles();
     }
   };
-  const handleFocusSubtitle = (id: string) => {
-    if (subtitleEditorRef.current) {
-      subtitleEditorRef.current.focusSubtitle(id);
-    }
-  };
-
-  const handleGetAllSubtitles = () => {
-    if (subtitleEditorRef.current) {
-      const allSubtitles = subtitleEditorRef.current.getAllSubtitles();
-      console.log('All subtitles:', allSubtitles);
-    }
-  };
 
 
   const stopWhisperHandle = (): void => {
@@ -108,25 +96,26 @@ function App(): JSX.Element {
   function handleClear(): void {
     // throw new Error('Function not implemented.');
     stopWhisperHandle();
-    setTranscriptions([])
+    setTranscriptions([]);
+    handleClearAllSubtitles();
   }
 
   return (
     <div style={{ padding: '0px' }}>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-        <div className="p-4 min-w-[600px]">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4">
           <VideoUpload onUpload={handleUpload} onClear={handleClear} width={'100%'} height={'460px'} />
         </div>
-        <div className="p-4 min-w-[600px]">
+        <div className="p-4 h-[calc(100vh-10px)] overflow-y-auto border border-gray-300 rounded-md">
           <SubtitleEditor ref={subtitleEditorRef} />
         </div>
       </div>
 
-      <div className="transcriptions">
+      {/* <div className="transcriptions">
         {transcriptions.map((transcription, index) => (
           <p key={index}>{transcription}</p>
         ))}
-      </div>
+      </div> */}
 
       {/* <img alt="logo" className="logo" src={electronLogo} />
       <div className="creator">Powered by electron-vite</div>

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SubtitleItem from './SubtitleItem';
 import { Subtitle } from './types';
 import { formatTime, mergeSubtitles } from './utils';
+import { v4 as uuidv4 } from 'uuid';
+
 
 export interface SubtitleEditorHandle {
   addSubtitle: (subtitle: Omit<Subtitle, 'id'>) => void;
@@ -17,20 +19,20 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
   const subtitleRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
-    if (subtitles.length === 0) {
-      const defaultSubtitle: Subtitle = {
-        id: Date.now().toString(),
-        startTime: '00:00:00.000',
-        endTime: '00:00:05.000',
-        content: 'Default subtitle'
-      };
-      setSubtitles([defaultSubtitle]);
-    }
+    // if (subtitles.length === 0) {
+    //   const defaultSubtitle: Subtitle = {
+    //     id: Date.now().toString(),
+    //     startTime: '00:00:00.000',
+    //     endTime: '00:00:05.000',
+    //     content: 'Default subtitle'
+    //   };
+    //   setSubtitles([defaultSubtitle]);
+    // }
   }, []);
 
   const handleInsert = useCallback((index: number, position: 'before' | 'after') => {
     const newSubtitle: Subtitle = {
-      id: Date.now().toString(),
+      id: uuidv4(),
       startTime: '00:00:00.000',
       endTime: '00:00:05.000',
       content: 'New subtitle'
@@ -89,7 +91,7 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
   const addSubtitle = useCallback((subtitle: Omit<Subtitle, 'id'>) => {
     const newSubtitle: Subtitle = {
       ...subtitle,
-      id: Date.now().toString(),
+      id: uuidv4(),
     };
     setSubtitles((prev) => [...prev, newSubtitle]);
   }, []);
