@@ -18,6 +18,18 @@ function App(): JSX.Element {
       subtitleEditorRef.current.clearAllSubtitles();
     }
   };
+  const handleFocusSubtitle = (id: string) => {
+    if (subtitleEditorRef.current) {
+      subtitleEditorRef.current.focusSubtitle(id);
+    }
+  };
+
+  const handleGetAllSubtitles = () => {
+    if (subtitleEditorRef.current) {
+      const allSubtitles = subtitleEditorRef.current.getAllSubtitles();
+      console.log('All subtitles:', allSubtitles);
+    }
+  };
 
 
   const stopWhisperHandle = (): void => {
@@ -101,11 +113,11 @@ function App(): JSX.Element {
 
   return (
     <div style={{ padding: '0px' }}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+        <div className="p-4 min-w-[600px]">
           <VideoUpload onUpload={handleUpload} onClear={handleClear} width={'100%'} height={'460px'} />
         </div>
-        <div className="p-4">
+        <div className="p-4 min-w-[600px]">
           <SubtitleEditor ref={subtitleEditorRef} />
         </div>
       </div>

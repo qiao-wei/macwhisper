@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useCallback, useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SubtitleItem from './SubtitleItem';
 import { Subtitle } from './types';
@@ -7,11 +7,14 @@ import { formatTime, mergeSubtitles } from './utils';
 export interface SubtitleEditorHandle {
   addSubtitle: (subtitle: Omit<Subtitle, 'id'>) => void;
   clearAllSubtitles: () => void;
+  focusSubtitle: (id: string) => void;
+  getAllSubtitles: () => Subtitle[];
 }
 
 const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const subtitleRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
     if (subtitles.length === 0) {
@@ -72,11 +75,14 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
     const mergedSubtitle = mergeSubtitles(selectedSubtitles);
     const firstSelectedIndex = subtitles.findIndex((sub) => sub.id === selectedIds[0]);
 
-    setSubtitles((prev) => [
-      ...prev.slice(0, firstSelectedIndex),
-      mergedSubtitle,
-      ...prev.slice(firstSelectedIndex + selectedIds.length).filter((sub) => !selectedIds.includes(sub.id))
-    ]);
+    setSubtitles((prev) => {
+      const newSubtitles = [
+        ...prev.slice(0, firstSelectedIndex),
+        mergedSubtitle,
+        ...prev.slice(firstSelectedIndex + selectedIds.length)
+      ].filter((sub) => !selectedIds.includes(sub.id) || sub.id === mergedSubtitle.id);
+      return newSubtitles;
+    });
     setSelectedIds([mergedSubtitle.id]);
   }, [subtitles, selectedIds]);
 
@@ -93,9 +99,22 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
     setSelectedIds([]);
   }, []);
 
+  const focusSubtitle = useCallback((id: string) => {
+    const subtitleElement = subtitleRefs.current[id];
+    if (subtitleElement) {
+      subtitleElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
+
+  const getAllSubtitles = useCallback(() => {
+    return subtitles;
+  }, [subtitles]);
+
   useImperativeHandle(ref, () => ({
     addSubtitle,
-    clearAllSubtitles
+    clearAllSubtitles,
+    focusSubtitle,
+    getAllSubtitles
   }));
 
   return (
@@ -113,16 +132,17 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <AnimatePresence>
           {subtitles.map((subtitle, index) => (
-            <SubtitleItem
-              key={subtitle.id}
-              subtitle={subtitle}
-              isSelected={selectedIds.includes(subtitle.id)}
-              onSelect={handleSelect}
-              onUpdate={handleUpdate}
-              onDelete={handleDelete}
-              onInsertBefore={() => handleInsert(index, 'before')}
-              onInsertAfter={() => handleInsert(index, 'after')}
-            />
+            <div key={subtitle.id} ref={(el) => (subtitleRefs.current[subtitle.id] = el)}>
+              <SubtitleItem
+                subtitle={subtitle}
+                isSelected={selectedIds.includes(subtitle.id)}
+                onSelect={handleSelect}
+                onUpdate={handleUpdate}
+                onDelete={handleDelete}
+                onInsertBefore={() => handleInsert(index, 'before')}
+                onInsertAfter={() => handleInsert(index, 'after')}
+              />
+            </div>
           ))}
         </AnimatePresence>
       </div>
