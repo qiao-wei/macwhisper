@@ -151,7 +151,7 @@ export default function VideoUpload({
           <div className="relative w-full h-full">
             <video
               ref={videoRef}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain bg-black"
               controls
               src={previewUrl || undefined}
             />

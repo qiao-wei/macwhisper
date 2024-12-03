@@ -4,8 +4,34 @@ import SubtitleEditor, { SubtitleEditorHandle } from './components/SubtitleEdito
 import { Subtitle } from './components/SubtitleEditor/types';
 
 function App(): JSX.Element {
-  const [transcriptions, setTranscriptions] = useState<string[]>([])
+  // const [transcriptions, setTranscriptions] = useState<string[]>([])
   const subtitleEditorRef = useRef<SubtitleEditorHandle>(null);
+
+  window.electron.ipcRenderer.on('on-translated', (_event, text) => {
+    console.log('text:', text)
+    subtitleEditorRef.current?.updateSubtitle(text.index,"translation",text.translated_content)
+    // setTranscriptions((prevTranscriptions) => [...prevTranscriptions, value])
+  })
+
+  function translateAllSubtitles() {
+    const subtitles = subtitleEditorRef.current?.getAllSubtitles();
+    console.log(subtitles)
+    const texts: { index: string; content: string }[] = []
+    subtitles?.forEach((subtitle) => {
+      texts.push({
+        index: subtitle.id,
+        content: subtitle.content,
+      });
+    })
+    console.log('texts:', texts)
+
+    window.electron.ipcRenderer.send('translate-text', {
+      texts: texts,
+      language: "英语",
+      concurrency: 1,
+    })
+
+  }
 
   const handleAddSubtitle = (subtitle: Omit<Subtitle, 'id'>) => {
     if (subtitleEditorRef.current) {
@@ -24,21 +50,6 @@ function App(): JSX.Element {
     window.electron.ipcRenderer.send('stop-transcription')
   }
 
-  const translateTextHandle = (): void => {
-    window.electron.ipcRenderer.send('translate-text', {
-      texts: [
-        { index: 1, content: '你好' },
-        { index: 2, content: '中国人' },
-        { index: 3, content: '你是谁' },
-      ],
-      language: "英语"
-    })
-  }
-
-  window.electron.ipcRenderer.on('on-translated', (_event, text) => {
-    console.log('text:', text)
-    // setTranscriptions((prevTranscriptions) => [...prevTranscriptions, value])
-  })
 
   // function parseSrt(srtContent: string): Subtitle[] {
 
@@ -96,7 +107,7 @@ function App(): JSX.Element {
   function handleClear(): void {
     // throw new Error('Function not implemented.');
     stopWhisperHandle();
-    setTranscriptions([]);
+    // setTranscriptions([]);
     handleClearAllSubtitles();
   }
 
@@ -107,6 +118,13 @@ function App(): JSX.Element {
           <VideoUpload onUpload={handleUpload} onClear={handleClear} width={'100%'} height={'460px'} />
         </div>
         <div className="p-4 h-[calc(100vh-10px)] overflow-y-auto border border-gray-300 rounded-md">
+
+          <button
+            onClick={translateAllSubtitles}
+            className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          >
+            Translate All
+          </button>
           <SubtitleEditor ref={subtitleEditorRef} />
         </div>
       </div>

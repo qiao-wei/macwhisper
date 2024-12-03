@@ -5,12 +5,13 @@ import { Subtitle } from './types';
 import { formatTime, mergeSubtitles } from './utils';
 import { v4 as uuidv4 } from 'uuid';
 
-
 export interface SubtitleEditorHandle {
   addSubtitle: (subtitle: Omit<Subtitle, 'id'>) => void;
+  updateSubtitle: (id: string, field: keyof Subtitle, value: string) => void;
   clearAllSubtitles: () => void;
   focusSubtitle: (id: string) => void;
   getAllSubtitles: () => Subtitle[];
+  // translateAllSubtitles: () => void;
 }
 
 const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
@@ -20,6 +21,7 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
 
   useEffect(() => {
     if (subtitles.length === 0) {
+      return;
       const defaultSubtitle: Subtitle = {
         id: Date.now().toString(),
         startTime: '00:00:00.000',
@@ -32,7 +34,7 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
 
   const handleInsert = useCallback((index: number, position: 'before' | 'after') => {
     const newSubtitle: Subtitle = {
-      id: uuidv4(),
+      id: uuidv4().toString(),
       startTime: '00:00:00.000',
       endTime: '00:00:05.000',
       content: 'New subtitle'
@@ -45,6 +47,8 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
   }, []);
 
   const handleUpdate = useCallback((id: string, field: keyof Subtitle, value: string) => {
+    console.log('handleUpdate:', id, field, value)
+    // console.log(id,field,value)
     setSubtitles((prev) =>
       prev.map((sub) =>
         sub.id === id
@@ -91,7 +95,7 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
   const addSubtitle = useCallback((subtitle: Omit<Subtitle, 'id'>) => {
     const newSubtitle: Subtitle = {
       ...subtitle,
-      id: uuidv4(),
+      id: uuidv4().toString(),
     };
     setSubtitles((prev) => [...prev, newSubtitle]);
   }, []);
@@ -112,17 +116,38 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
     return subtitles;
   }, [subtitles]);
 
+  const translateSubtitle = useCallback((id: string) => {
+    // This is a mock translation function. In a real-world scenario, you would call an API here.
+    setSubtitles((prev) =>
+      prev.map((sub) =>
+        sub.id === id
+          ? { ...sub, translation: `Translated: ${sub.content}` }
+          : sub
+      )
+    );
+  }, []);
+
+  const updateSubtitle = handleUpdate;
+
+  // const translateAllSubtitles = useCallback(() => {
+  //   setSubtitles((prev) =>
+  //     prev.map((sub) => ({ ...sub, translation: `Translated: ${sub.content}` }))
+  //   );
+  // }, []);
+
   useImperativeHandle(ref, () => ({
     addSubtitle,
+    updateSubtitle,
     clearAllSubtitles,
     focusSubtitle,
-    getAllSubtitles
+    getAllSubtitles,
+    // translateAllSubtitles
   }));
 
   return (
     <div className="max-w-4xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">Subtitle Editor</h1>
-      <div className="mb-6 flex justify-end">
+
+      <div className="mb-6 flex justify-end space-x-4">
         <button
           onClick={handleMerge}
           disabled={selectedIds.length < 2}
@@ -130,6 +155,12 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
         >
           Merge Selected
         </button>
+        {/* <button
+          onClick={translateAllSubtitles}
+          className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        >
+          Translate All
+        </button> */}
       </div>
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <AnimatePresence>
@@ -143,6 +174,7 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
                 onDelete={handleDelete}
                 onInsertBefore={() => handleInsert(index, 'before')}
                 onInsertAfter={() => handleInsert(index, 'after')}
+                onTranslate={() => translateSubtitle(subtitle.id)}
               />
             </div>
           ))}

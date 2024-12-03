@@ -81,14 +81,14 @@ app.whenReady().then(() => {
   const model = "gpt-4o-2024-08-06";
   const llmService: LLMService = new LikeOpenAIService("https://api.302.ai/v1", apiKey, model);
 
-  ipcMain.on('translate-text', async (event, { texts, language }) => {
+  ipcMain.on('translate-text', async (event, { texts, language, concurrency }: { texts: any[], language: string, concurrency: number }) => {
     const translateService: TranslateService = new LLMTranslateService(llmService);
 
     const win = BrowserWindow.fromWebContents(event.sender);
 
     // const pLimit = require('p-limit');
     const pLimit = await import('p-limit').then(module => module.default);
-    const limit = pLimit(5)
+    const limit = pLimit(concurrency)
 
     const promises = texts.map(text =>
       limit(async () => {
@@ -125,7 +125,7 @@ app.whenReady().then(() => {
       return;
     }
 
-    asrService = new WhisperASRService(modelSize);
+    asrService = new WhisperASRService(modelSize, isUseGPU);
 
     // // Listen for a 'stop-transcription' event to terminate the process
     ipcMain.once('stop-transcription', () => {
@@ -154,7 +154,7 @@ app.whenReady().then(() => {
       asrService = undefined;
     }
     asrService.transcribe(
-      { audioFile, language, sampleRate: 16000 },
+      { audioFile, language },
       onData,
       onError,
       onClose,
