@@ -26,6 +26,18 @@ const TimeInput: React.FC<{ value: string; onChange: (value: string) => void; is
     return null;
   }
 
+  function formatTime(time) {
+    // 假设时间格式为 "HH:MM:SS.SSS"
+    let [hours, minutes, seconds] = time.split(":");
+    let [sec, milli] = seconds.split(".");
+
+    // 处理小时：如果小时是 "00"，则不显示小时
+    let result = `${parseInt(hours) === 0 ? "" : hours}:${minutes}:${sec}`;
+
+    // 去除多余的 ":" 号
+    return result.replace(/^:/, "");
+  }
+
   return isEditing ? (
     <input
       ref={inputRef}
@@ -33,14 +45,14 @@ const TimeInput: React.FC<{ value: string; onChange: (value: string) => void; is
       value={localValue}
       onChange={(e) => setLocalValue(e.target.value)}
       onBlur={handleBlur}
-      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      className="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
     />
   ) : (
     <div
       onClick={() => setIsEditing(true)}
-      className="cursor-pointer p-2 rounded transition-colors flex items-center justify-center h-full hover:bg-blue-50"
+      className="cursor-pointer rounded transition-colors flex items-center justify-center h-full hover:bg-blue-50"
     >
-      {value}
+      {formatTime(value)}
     </div>
   );
 };
@@ -79,12 +91,12 @@ const ContentInput: React.FC<{ value: string; onChange: (value: string) => void;
           onChange={(e) => setLocalValue(e.target.value)}
           onBlur={handleBlur}
           rows={2}
-          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y min-h-[60px]"
+          className="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y min-h-[60px]"
         />
       ) : (
         <div
           onClick={() => setIsEditing(true)}
-          className="cursor-pointer p-2 rounded transition-colors min-h-[40px] overflow-hidden flex items-center justify-center text-center hover:bg-blue-50"
+          className="cursor-pointer rounded transition-colors min-h-[40px] overflow-hidden flex items-center justify-start hover:bg-blue-50"
         >
           <div className="line-clamp-2">{value}</div>
         </div>
@@ -114,9 +126,8 @@ const SubtitleItem: React.FC<SubtitleItemProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className={`flex items-center space-x-4 p-4 ${
-        isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'
-      } transition-colors`}
+      className={`flex items-center space-x-4 p-4 ${isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'
+        } transition-colors`}
     >
       <input
         type="checkbox"
@@ -124,14 +135,36 @@ const SubtitleItem: React.FC<SubtitleItemProps> = ({
         onChange={() => onSelect(subtitle.id)}
         className="form-checkbox h-5 w-5 text-blue-600 rounded-full"
       />
-      <div className={`flex-1 grid ${isContentEditing ? 'grid-cols-1' : 'grid-cols-3'} gap-4 items-center`}>
+      {/* <div className={`flex-1 grid ${isContentEditing ? 'grid-cols-1' : 'grid-cols-3'} gap-4 items-center`}>
         <TimeInput value={subtitle.startTime} onChange={(value) => handleUpdate('startTime', value)} isContentEditing={isContentEditing} />
         <TimeInput value={subtitle.endTime} onChange={(value) => handleUpdate('endTime', value)} isContentEditing={isContentEditing} />
-        <ContentInput 
-          value={subtitle.content} 
-          onChange={(value) => handleUpdate('content', value)} 
+        <ContentInput
+          value={subtitle.content}
+          onChange={(value) => handleUpdate('content', value)}
           onEditStateChange={setIsContentEditing}
         />
+      </div> */}
+      <div className={`flex-1 grid ${isContentEditing ? 'grid-cols-1' : 'grid-cols-3'} gap-4 items-center`}>
+        <div className="flex flex-col w-[120px]">
+          <TimeInput
+            value={subtitle.startTime}
+            onChange={(value) => handleUpdate('startTime', value)}
+            isContentEditing={isContentEditing}
+          />
+          <TimeInput
+            value={subtitle.endTime}
+            onChange={(value) => handleUpdate('endTime', value)}
+            isContentEditing={isContentEditing}
+          />
+        </div>
+
+        <div className="flex-grow text-left">
+          <ContentInput
+            value={subtitle.content}
+            onChange={(value) => handleUpdate('content', value)}
+            onEditStateChange={setIsContentEditing}
+          />
+        </div>
       </div>
       <div className="flex space-x-2">
         <button
