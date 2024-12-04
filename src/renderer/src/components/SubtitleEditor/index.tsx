@@ -1,9 +1,8 @@
 import React, { useState, useCallback, useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SubtitleItem from './SubtitleItem';
-import { Subtitle } from './types';
-import { formatTime, mergeSubtitles } from './utils';
-import { v4 as uuidv4 } from 'uuid';
+import { Subtitle, SubtitleEditorProps } from './types';
+import { formatTime, mergeSubtitles, generateId } from './utils';
 
 export interface SubtitleEditorHandle {
   addSubtitle: (subtitle: Omit<Subtitle, 'id'>) => void;
@@ -11,19 +10,18 @@ export interface SubtitleEditorHandle {
   clearAllSubtitles: () => void;
   focusSubtitle: (id: string) => void;
   getAllSubtitles: () => Subtitle[];
-  // translateAllSubtitles: () => void;
+  translateAllSubtitles: () => void;
 }
 
-const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
+const SubtitleEditor = forwardRef<SubtitleEditorHandle, SubtitleEditorProps>((props, ref) => {
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const subtitleRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
     if (subtitles.length === 0) {
-      return;
       const defaultSubtitle: Subtitle = {
-        id: Date.now().toString(),
+        id: generateId(),
         startTime: '00:00:00.000',
         endTime: '00:00:05.000',
         content: 'Default subtitle'
@@ -34,7 +32,7 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
 
   const handleInsert = useCallback((index: number, position: 'before' | 'after') => {
     const newSubtitle: Subtitle = {
-      id: uuidv4().toString(),
+      id: generateId(),
       startTime: '00:00:00.000',
       endTime: '00:00:05.000',
       content: 'New subtitle'
@@ -47,8 +45,6 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
   }, []);
 
   const handleUpdate = useCallback((id: string, field: keyof Subtitle, value: string) => {
-    console.log('handleUpdate:', id, field, value)
-    // console.log(id,field,value)
     setSubtitles((prev) =>
       prev.map((sub) =>
         sub.id === id
@@ -82,11 +78,8 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
     const firstSelectedIndex = subtitles.findIndex((sub) => sub.id === selectedIds[0]);
 
     setSubtitles((prev) => {
-      const newSubtitles = [
-        ...prev.slice(0, firstSelectedIndex),
-        mergedSubtitle,
-        ...prev.slice(firstSelectedIndex + selectedIds.length)
-      ].filter((sub) => !selectedIds.includes(sub.id) || sub.id === mergedSubtitle.id);
+      const newSubtitles = prev.filter((sub) => !selectedIds.includes(sub.id));
+      newSubtitles.splice(firstSelectedIndex, 0, mergedSubtitle);
       return newSubtitles;
     });
     setSelectedIds([mergedSubtitle.id]);
@@ -95,7 +88,7 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
   const addSubtitle = useCallback((subtitle: Omit<Subtitle, 'id'>) => {
     const newSubtitle: Subtitle = {
       ...subtitle,
-      id: uuidv4().toString(),
+      id: generateId(),
     };
     setSubtitles((prev) => [...prev, newSubtitle]);
   }, []);
@@ -116,24 +109,7 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
     return subtitles;
   }, [subtitles]);
 
-  const translateSubtitle = useCallback((id: string) => {
-    // This is a mock translation function. In a real-world scenario, you would call an API here.
-    setSubtitles((prev) =>
-      prev.map((sub) =>
-        sub.id === id
-          ? { ...sub, translation: `Translated: ${sub.content}` }
-          : sub
-      )
-    );
-  }, []);
-
   const updateSubtitle = handleUpdate;
-
-  // const translateAllSubtitles = useCallback(() => {
-  //   setSubtitles((prev) =>
-  //     prev.map((sub) => ({ ...sub, translation: `Translated: ${sub.content}` }))
-  //   );
-  // }, []);
 
   useImperativeHandle(ref, () => ({
     addSubtitle,
@@ -141,28 +117,48 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
     clearAllSubtitles,
     focusSubtitle,
     getAllSubtitles,
-    // translateAllSubtitles
+    translateAllSubtitles: () => {} // Placeholder to avoid error. Functionality removed.
   }));
 
   return (
-    <div className="max-w-4xl mx-auto p-8">
-
-      <div className="mb-6 flex justify-end space-x-4">
-        <button
-          onClick={handleMerge}
-          disabled={selectedIds.length < 2}
-          className="bg-green-500 text-white px-6 py-2 rounded-full hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          Merge Selected
-        </button>
-        {/* <button
-          onClick={translateAllSubtitles}
-          className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-        >
-          Translate All
-        </button> */}
+    <div className="max-w-4xl mx-auto p-8 bg-white">
+      <div className="mb-6 flex justify-between items-center border-b pb-4">
+        <div className="text-sm text-gray-500">
+          {selectedIds.length > 0 ? `${selectedIds.length} items selected` : 'No items selected'}
+        </div>
+        <div className="flex space-x-3">
+          <button
+            onClick={props.onTranslateAll}
+            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M7 2a1 1 0 011 1v1h3a1 1 0 110 2h-1.586l3.293 3.293a1 1 0 01-1.414 1.414L8 7.414V11a1 1 0 11-2 0V3a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            Translate All
+          </button>
+          <button
+            onClick={handleMerge}
+            disabled={selectedIds.length < 2}
+            className="flex items-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+            </svg>
+            Merge Selected
+          </button>
+          <button
+            onClick={() => selectedIds.length > 0 && selectedIds.forEach(handleDelete)}
+            disabled={selectedIds.length === 0}
+            className="flex items-center px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            Delete Selected
+          </button>
+        </div>
       </div>
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+      <div className="bg-gray-100 rounded-lg overflow-hidden">
         <AnimatePresence>
           {subtitles.map((subtitle, index) => (
             <div key={subtitle.id} ref={(el) => (subtitleRefs.current[subtitle.id] = el)}>
@@ -174,7 +170,7 @@ const SubtitleEditor = forwardRef<SubtitleEditorHandle>((props, ref) => {
                 onDelete={handleDelete}
                 onInsertBefore={() => handleInsert(index, 'before')}
                 onInsertAfter={() => handleInsert(index, 'after')}
-                onTranslate={() => translateSubtitle(subtitle.id)}
+                onTranslateRequest={(id, content) => props.onTranslateSubtitle(id, content)}
               />
             </div>
           ))}

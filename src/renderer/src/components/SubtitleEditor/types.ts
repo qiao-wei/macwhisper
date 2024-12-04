@@ -14,6 +14,11 @@ export interface SubtitleItemProps {
   onDelete: (id: string) => void;
   onInsertBefore: () => void;
   onInsertAfter: () => void;
-  onTranslate: () => void;
+  onTranslateRequest: (id: string, content: string) => void;
+}
+
+export interface SubtitleEditorProps {
+  onTranslateAll: () => void;
+  onTranslateSubtitle: (id: string, content: string) => void;
 }
 

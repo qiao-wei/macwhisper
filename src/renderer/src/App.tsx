@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import VideoUpload from './components/VideoUpload';
 import SubtitleEditor, { SubtitleEditorHandle } from './components/SubtitleEditor';
 import { Subtitle } from './components/SubtitleEditor/types';
+import Versions from './components/Versions';
 
 function App(): JSX.Element {
   // const [transcriptions, setTranscriptions] = useState<string[]>([])
@@ -32,6 +33,18 @@ function App(): JSX.Element {
     })
 
   }
+   
+  function translateSubtitle(index: string, content: string) {
+    console.log('index:', index, 'content:', content)
+    window.electron.ipcRenderer.send('translate-text', {
+      texts: [{
+        index: index,
+        content: content,
+      }],
+      language: "英语",
+      concurrency: 1,
+    })
+  } 
 
   const handleAddSubtitle = (subtitle: Omit<Subtitle, 'id'>) => {
     if (subtitleEditorRef.current) {
@@ -117,56 +130,18 @@ function App(): JSX.Element {
         <div className="p-4">
           <VideoUpload onUpload={handleUpload} onClear={handleClear} width={'100%'} height={'460px'} />
         </div>
-        <div className="p-4 h-[calc(100vh-10px)] overflow-y-auto border border-gray-300 rounded-md">
-
-          <button
+        <div className="p-4 h-[calc(100vh-10px)] overflow-y-auto">
+          {/* <button
             onClick={translateAllSubtitles}
             className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           >
             Translate All
-          </button>
-          <SubtitleEditor ref={subtitleEditorRef} />
+          </button> */}
+          <SubtitleEditor ref={subtitleEditorRef} onTranslateAll={translateAllSubtitles} onTranslateSubtitle={translateSubtitle} />
         </div>
       </div>
 
-      {/* <div className="transcriptions">
-        {transcriptions.map((transcription, index) => (
-          <p key={index}>{transcription}</p>
-        ))}
-      </div> */}
-
-      {/* <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
-      </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={whisperHandle}>
-            whisper
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={stopWhisperHandle}>
-            stop whisper
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={translateTextHandle}>
-            翻译文本
-          </a>
-        </div>
-      </div>
-      <Versions></Versions> */}
+      <Versions></Versions> 
     </div>
   )
 }

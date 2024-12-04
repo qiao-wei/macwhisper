@@ -128,7 +128,7 @@ const EditableText: React.FC<{
       ) : (
         <div
           onClick={() => setIsEditing(true)}
-          className="cursor-pointer p-2 rounded transition-colors inline-block min-h-[40px] hover:bg-blue-50"
+          className="cursor-pointer p-2 rounded transition-colors inline-block min-h-[40px] hover:bg-gray-200"
         >
           <div className="line-clamp-2 text-left">
             {value || <span className="text-gray-400">{placeholder}</span>}
@@ -147,7 +147,7 @@ const SubtitleItem: React.FC<SubtitleItemProps> = ({
   onDelete,
   onInsertBefore,
   onInsertAfter,
-  onTranslate
+  onTranslateRequest
 }) => {
   const [isContentEditing, setIsContentEditing] = useState(false);
   const [isTranslationEditing, setIsTranslationEditing] = useState(false);
@@ -163,14 +163,14 @@ const SubtitleItem: React.FC<SubtitleItemProps> = ({
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
       className={`flex items-start space-x-2 p-4 ${
-        isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'
-      } transition-colors`}
+        isSelected ? 'bg-blue-100' : 'hover:bg-gray-200'
+      } transition-colors border-b border-gray-200`}
     >
       <input
         type="checkbox"
         checked={isSelected}
         onChange={() => onSelect(subtitle.id)}
-        className="form-checkbox h-5 w-5 text-blue-600 rounded-full mt-2"
+        className="form-checkbox h-5 w-5 text-blue-500 rounded mt-2 border-2 border-gray-300"
       />
       <div className="flex-1 flex items-start">
         <div className="w-[120px] flex-shrink-0">
@@ -194,13 +194,13 @@ const SubtitleItem: React.FC<SubtitleItemProps> = ({
             onChange={(value) => handleUpdate('translation', value)} 
             onEditStateChange={setIsTranslationEditing}
             placeholder="Enter translation"
-            className="text-sm text-gray-600 italic pl-2 border-l-2 border-gray-300"
+            className="text-sm text-gray-600 italic pl-2 border-l-2 border-gray-300 mt-1"
           />
         </div>
         <div className="w-[120px] flex-shrink-0 flex justify-end space-x-2">
           <button
             onClick={onInsertBefore}
-            className="text-gray-400 hover:text-blue-600 transition-colors focus:outline-none p-1 rounded-full hover:bg-gray-100"
+            className="text-gray-500 hover:text-blue-500 transition-colors focus:outline-none p-1 rounded hover:bg-gray-200"
             title="Insert before"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -209,7 +209,7 @@ const SubtitleItem: React.FC<SubtitleItemProps> = ({
           </button>
           <button
             onClick={onInsertAfter}
-            className="text-gray-400 hover:text-blue-600 transition-colors focus:outline-none p-1 rounded-full hover:bg-gray-100"
+            className="text-gray-500 hover:text-blue-500 transition-colors focus:outline-none p-1 rounded hover:bg-gray-200"
             title="Insert after"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -217,8 +217,8 @@ const SubtitleItem: React.FC<SubtitleItemProps> = ({
             </svg>
           </button>
           <button
-            onClick={onTranslate}
-            className="text-gray-400 hover:text-blue-600 transition-colors focus:outline-none p-1 rounded-full hover:bg-gray-100"
+            onClick={() => onTranslateRequest(subtitle.id, subtitle.content)}
+            className="text-gray-500 hover:text-blue-500 transition-colors focus:outline-none p-1 rounded hover:bg-gray-200"
             title="Translate"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -227,7 +227,7 @@ const SubtitleItem: React.FC<SubtitleItemProps> = ({
           </button>
           <button
             onClick={() => onDelete(subtitle.id)}
-            className="text-gray-400 hover:text-red-600 transition-colors focus:outline-none p-1 rounded-full hover:bg-gray-100"
+            className="text-gray-500 hover:text-red-600 transition-colors focus:outline-none p-1 rounded hover:bg-gray-200"
             title="Delete"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

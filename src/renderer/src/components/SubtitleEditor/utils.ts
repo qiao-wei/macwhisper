@@ -1,4 +1,5 @@
 import { Subtitle } from './types';
+import { v4 as uuidv4 } from 'uuid';
 
 export const formatTime = (time: string): string => {
   // Ensure the time is in the correct format
@@ -10,11 +11,17 @@ export const mergeSubtitles = (subtitles: Subtitle[]): Subtitle => {
   const startTime = subtitles[0].startTime;
   const endTime = subtitles[subtitles.length - 1].endTime;
   const content = subtitles.map(s => s.content).join(' ');
+  const translation = subtitles.map(s => s.translation).filter(Boolean).join(' ');
   return {
     id: subtitles[0].id,
     startTime,
     endTime,
-    content
+    content,
+    translation: translation.length > 0 ? translation : undefined
   };
+};
+
+export const generateId = (): string => {
+  return uuidv4();
 };
 
