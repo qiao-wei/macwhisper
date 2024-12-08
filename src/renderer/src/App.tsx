@@ -1,27 +1,28 @@
 import { useRef, useState } from 'react'
 import VideoUpload from './components/VideoUpload';
-import SubtitleEditor, { SubtitleEditorHandle } from './components/SubtitleEditor';
-import { Subtitle } from './components/SubtitleEditor/types';
-import Versions from './components/Versions';
+import SubtitlePage from './SubtitlePage';
+import { SubtitleLine } from './components/SubtitleEditor';
+
+import { v4 as uuidv4 } from 'uuid';
 
 function App(): JSX.Element {
-  // const [transcriptions, setTranscriptions] = useState<string[]>([])
-  const subtitleEditorRef = useRef<SubtitleEditorHandle>(null);
+
+  const [subtitleLines, setSubtitleLines] = useState<SubtitleLine[]>([]);
 
   window.electron.ipcRenderer.on('on-translated', (_event, text) => {
     console.log('text:', text)
-    subtitleEditorRef.current?.updateSubtitle(text.index,"translation",text.translated_content)
+    // subtitleEditorRef.current?.updateSubtitle(text.index, "translation", text.translated_content)
     // setTranscriptions((prevTranscriptions) => [...prevTranscriptions, value])
   })
 
   function translateAllSubtitles() {
-    const subtitles = subtitleEditorRef.current?.getAllSubtitles();
-    console.log(subtitles)
+    // const subtitles = subtitleEditorRef.current?.getAllSubtitles();
+    console.log(subtitleLines)
     const texts: { index: string; content: string }[] = []
-    subtitles?.forEach((subtitle) => {
+    subtitleLines?.forEach((subtitle) => {
       texts.push({
         index: subtitle.id,
-        content: subtitle.content,
+        content: subtitle.text,
       });
     })
     console.log('texts:', texts)
@@ -33,7 +34,7 @@ function App(): JSX.Element {
     })
 
   }
-   
+
   function translateSubtitle(index: string, content: string) {
     console.log('index:', index, 'content:', content)
     window.electron.ipcRenderer.send('translate-text', {
@@ -44,18 +45,14 @@ function App(): JSX.Element {
       language: "英语",
       concurrency: 1,
     })
-  } 
+  }
 
-  const handleAddSubtitle = (subtitle: Omit<Subtitle, 'id'>) => {
-    if (subtitleEditorRef.current) {
-      subtitleEditorRef.current.addSubtitle(subtitle);
-    }
+  const handleAddSubtitle = (subtitle: SubtitleLine) => {
+    setSubtitleLines((prev) => [...prev, subtitle]);
   };
 
   const handleClearAllSubtitles = () => {
-    if (subtitleEditorRef.current) {
-      subtitleEditorRef.current.clearAllSubtitles();
-    }
+    setSubtitleLines([]);
   };
 
 
@@ -64,11 +61,15 @@ function App(): JSX.Element {
   }
 
 
-  // function parseSrt(srtContent: string): Subtitle[] {
-
-
-  //   return subtitles;
-  // }
+  // const initialSubtitleLines: SubtitleLine[] = [
+  //   { id: uuidv4(), startTime: "00:00:00.000", endTime: "00:00:02.000", text: "teníamos una unidad táctica en ese momento.", translation: "中国人" },
+  //   { id: uuidv4(), startTime: "00:00:03.000", endTime: "00:00:04.000", text: "Dividimos un país en varias unidades tácticas." },
+  //   { id: uuidv4(), startTime: "00:00:04.000", endTime: "00:00:10.000", text: "Y luego comenzamos a dividirnos en divisiones de la empresa internacional." },
+  //   { id: uuidv4(), startTime: "00:00:10.000", endTime: "00:00:14.000", text: "Terto, incluso, queríamos dividirnos más." },
+  //   { id: uuidv4(), startTime: "00:00:14.000", endTime: "00:00:20.000", text: "Queríamos dividirnos en algo llamado vehículos de combustible y vehículos de energía nueva." },
+  //   { id: uuidv4(), startTime: "00:00:20.000", endTime: "00:00:22.000", text: "Así que, en realidad," },
+  //   { id: uuidv4(), startTime: "00:00:22.000", endTime: "00:00:27.000", text: "si continuamos dibujando este diagrama podría tener una, dos, tres," },
+  // ];
 
   window.electron.ipcRenderer.on('on-transcribing', (_event, value) => {
 
@@ -86,11 +87,13 @@ function App(): JSX.Element {
       const endTime = match[2];
       const content = match[3].trim();
 
-      const subtitle: Omit<Subtitle, 'id'> = {
+      const subtitle: SubtitleLine = {
+        id: uuidv4(),
         startTime: startTime,
         endTime: endTime,
-        content: content
+        text: content
       }
+
       console.log('subtitle:', subtitle)
       handleAddSubtitle(subtitle);
     }
@@ -124,6 +127,7 @@ function App(): JSX.Element {
     handleClearAllSubtitles();
   }
 
+
   return (
     <div style={{ padding: '0px' }}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -137,11 +141,11 @@ function App(): JSX.Element {
           >
             Translate All
           </button> */}
-          <SubtitleEditor ref={subtitleEditorRef} onTranslateAll={translateAllSubtitles} onTranslateSubtitle={translateSubtitle} />
+          {/* <SubtitleEditer ref={subtitleEditorRef} onTranslateAll={translateAllSubtitles} onTranslateSubtitle={translateSubtitle} /> */}
+          <SubtitlePage subtitleLines={subtitleLines} setSubtitleLines={setSubtitleLines} />
         </div>
       </div>
 
-      <Versions></Versions> 
     </div>
   )
 }
