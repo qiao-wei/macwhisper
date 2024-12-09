@@ -317,7 +317,7 @@ const SubtitleEditor = forwardRef<SubtitleEditorRef, SubtitleEditorProps>(({
       </div>
 
       {/* <div className="flex flex-col "> */}
-      <div className="flex flex-col overflow-y-auto max-h-[calc(100%-56px)] custom-scrollbar">
+      <div className="flex flex-col overflow-y-auto max-h-[calc(100%-56px)] custom-scrollbar margin-1">
         {/* 顶部插入按钮 */}
         {isFullMode && !isSelectMode && (
           <div className="flex items-center justify-center py-0 group">

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 // import { PlusIcon } from '@heroicons/react/24/outline';
 import SubtitleEditor, { SubtitleEditorRef } from './components/SubtitleEditor';
@@ -10,7 +10,7 @@ interface SubtitlePageProps {
   setSubtitleLines: React.Dispatch<React.SetStateAction<SubtitleLine[]>>;
 }
 
-function SubtitlePage({ subtitleLines, setSubtitleLines }: SubtitlePageProps) {
+function SubtitlePartition({ subtitleLines, setSubtitleLines }: SubtitlePageProps) {
   // const [subtitleLines, setSubtitleLines] = useState<SubtitleLine[]>(initialTranscriptData);
   const editorRef = useRef<SubtitleEditorRef>(null);
   const translateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -114,61 +114,104 @@ function SubtitlePage({ subtitleLines, setSubtitleLines }: SubtitlePageProps) {
     setSubtitleLines(newSubtitleLines);
   };
 
-  const handleTranslateLine = (id: string) => {
-    const newSubtitleLines = [...subtitleLines];
-    const index = newSubtitleLines.findIndex(line => line.id === id);
-    if (index !== -1) {
-      newSubtitleLines[index] = {
-        ...newSubtitleLines[index],
-        isTranslating: true
-      };
-      setSubtitleLines(newSubtitleLines);
-
-      // 模拟翻译延迟
-      setTimeout(() => {
-        const updatedData = [...newSubtitleLines];
-        const lineIndex = updatedData.findIndex(line => line.id === id);
-        if (lineIndex !== -1) {
-          updatedData[lineIndex] = {
-            ...updatedData[lineIndex],
-            isTranslating: false,
-            translation: `[翻译] ${updatedData[lineIndex].text}`
-          };
-          setSubtitleLines(updatedData);
-        }
-      }, 1000);
+  useEffect(() => {
+    console.log("==========================")
+    const listener = (_event, result) => {
+      console.log('result:', result)
+      // subtitleEditorRef.current?.updateSubtitle(text.index, "translation", text.translated_content)
+      // setTranscriptions((prevTranscriptions) => [...prevTranscriptions, value])
     }
+    window.electron.ipcRenderer.on('on-translated', listener)
+    // 清理函数，避免内存泄漏
+    return () => {
+      window.electron.ipcRenderer.removeListener('on-translated', listener);
+    };
+  }, [])
+
+  const handleTranslateLine = (id: string) => {
+    const index = id;
+    const content = subtitleLines.find(line => line.id === id)?.text || '';
+    console.log('index:', index, 'content:', content)
+    window.electron.ipcRenderer.send('translate-text', {
+      texts: [{
+        index: index,
+        content: content,
+      }],
+      language: "英语",
+      concurrency: 1,
+    })
+    // const newSubtitleLines = [...subtitleLines];
+    // const index = newSubtitleLines.findIndex(line => line.id === id);
+    // if (index !== -1) {
+    //   newSubtitleLines[index] = {
+    //     ...newSubtitleLines[index],
+    //     isTranslating: true
+    //   };
+    //   setSubtitleLines(newSubtitleLines);
+
+    //   // 模拟翻译延迟
+    //   setTimeout(() => {
+    //     const updatedData = [...newSubtitleLines];
+    //     const lineIndex = updatedData.findIndex(line => line.id === id);
+    //     if (lineIndex !== -1) {
+    //       updatedData[lineIndex] = {
+    //         ...updatedData[lineIndex],
+    //         isTranslating: false,
+    //         translation: `[翻译] ${updatedData[lineIndex].text}`
+    //       };
+    //       setSubtitleLines(updatedData);
+    //     }
+    //   }, 1000);
+    // }
   };
 
   const handleTranslateAll = () => {
-    const translateLine = (lines: SubtitleLine[], currentIndex: number) => {
-      if (currentIndex >= lines.length) {
-        // 所有翻译完成时调用组件方法
-        editorRef.current?.handleAllTranslationsComplete();
-        return; // 所有行都已翻译完成
-      }
+    console.log(subtitleLines)
+    const texts: { index: string; content: string }[] = []
+    subtitleLines?.forEach((subtitle) => {
+      texts.push({
+        index: subtitle.id,
+        content: subtitle.text,
+      });
+    })
+    setSubtitleLines(subtitleLines.map(line => ({
+      ...line,
+      isTranslating: true
+    })))
 
-      const newSubtitleLine = [...lines];
-      newSubtitleLine[currentIndex] = {
-        ...newSubtitleLine[currentIndex],
-        isTranslating: true
-      };
-      setSubtitleLines(newSubtitleLine);
+    window.electron.ipcRenderer.send('translate-text', {
+      texts: texts,
+      language: "英语",
+      concurrency: 1,
+    })
+    // const translateLine = (lines: SubtitleLine[], currentIndex: number) => {
+    //   if (currentIndex >= lines.length) {
+    //     // 所有翻译完成时调用组件方法
+    //     editorRef.current?.handleAllTranslationsComplete();
+    //     return; // 所有行都已翻译完成
+    //   }
 
-      translateTimeoutRef.current = setTimeout(() => {
-        const updatedData = [...newSubtitleLine];
-        updatedData[currentIndex] = {
-          ...updatedData[currentIndex],
-          isTranslating: false,
-          translation: `[翻译] ${updatedData[currentIndex].text}`
-        };
-        setSubtitleLines(updatedData);
+    //   const newSubtitleLine = [...lines];
+    //   newSubtitleLine[currentIndex] = {
+    //     ...newSubtitleLine[currentIndex],
+    //     isTranslating: true
+    //   };
+    //   setSubtitleLines(newSubtitleLine);
 
-        translateLine(updatedData, currentIndex + 1);
-      }, 500);
-    };
+    //   translateTimeoutRef.current = setTimeout(() => {
+    //     const updatedData = [...newSubtitleLine];
+    //     updatedData[currentIndex] = {
+    //       ...updatedData[currentIndex],
+    //       isTranslating: false,
+    //       translation: `[翻译] ${updatedData[currentIndex].text}`
+    //     };
+    //     setSubtitleLines(updatedData);
 
-    translateLine(subtitleLines, 0);
+    //     translateLine(updatedData, currentIndex + 1);
+    //   }, 500);
+    // };
+
+    // translateLine(subtitleLines, 0);
   };
 
   const handleStopTranslate = () => {
@@ -218,4 +261,4 @@ function calculateStartTime(endTime: string, duration: string): string {
   return endTime;
 }
 
-export default SubtitlePage
+export default SubtitlePartition
