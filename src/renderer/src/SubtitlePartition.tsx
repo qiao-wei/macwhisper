@@ -120,6 +120,23 @@ function SubtitlePartition({ subtitleLines, setSubtitleLines }: SubtitlePageProp
       console.log('result:', result)
       // subtitleEditorRef.current?.updateSubtitle(text.index, "translation", text.translated_content)
       // setTranscriptions((prevTranscriptions) => [...prevTranscriptions, value])
+
+      const newSubtitleLines = [...subtitleLines];
+      const lineIndex = newSubtitleLines.findIndex(line => line.id === result.index);
+      if (lineIndex !== -1) {
+        newSubtitleLines[lineIndex] = {
+          ...newSubtitleLines[lineIndex],
+          isTranslating: false,
+          translation: result.translated_content
+        };
+        setSubtitleLines(newSubtitleLines);
+
+        const allTranslated = newSubtitleLines.every(line => !line.isTranslating);
+        if (allTranslated) {
+          editorRef.current?.handleAllTranslationsComplete();
+        }
+
+      }
     }
     window.electron.ipcRenderer.on('on-translated', listener)
     // 清理函数，避免内存泄漏
