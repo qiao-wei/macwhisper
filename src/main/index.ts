@@ -10,6 +10,7 @@ import { LLMTranslateService } from './services/impl/llm-translate-service'
 import { TranslateService } from './services/translate-service'
 import ffmpeg from 'fluent-ffmpeg'
 import { spawn } from 'child_process'
+// import os from 'os'
 
 // let transcriptionProcess: any = null
 let asrService: ASRService | undefined = undefined
@@ -77,9 +78,10 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  const apiKey = "sk-vR7AcspkZvxTNh01IurmwykxcdVdQgwGmTiFS3UZ3N1VbuHi";
-  const model = "gpt-4o-2024-08-06";
-  const llmService: LLMService = new LikeOpenAIService("https://api.302.ai/v1", apiKey, model);
+  const apiKey =  process.env.OPENAI_API_KEY
+  const model = "Baichuan4-Air";
+  const llmBaseUrl = "https://api.baichuan-ai.com/v1"
+  const llmService: LLMService = new LikeOpenAIService(llmBaseUrl, apiKey, model);
 
   ipcMain.on('translate-text', async (event, { texts, language, concurrency }: { texts: any[], language: string, concurrency: number }) => {
     const translateService: TranslateService = new LLMTranslateService(llmService);

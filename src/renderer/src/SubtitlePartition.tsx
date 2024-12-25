@@ -121,22 +121,38 @@ function SubtitlePartition({ subtitleLines, setSubtitleLines }: SubtitlePageProp
       // subtitleEditorRef.current?.updateSubtitle(text.index, "translation", text.translated_content)
       // setTranscriptions((prevTranscriptions) => [...prevTranscriptions, value])
 
-      const newSubtitleLines = [...subtitleLines];
-      const lineIndex = newSubtitleLines.findIndex(line => line.id === result.index);
-      if (lineIndex !== -1) {
-        newSubtitleLines[lineIndex] = {
-          ...newSubtitleLines[lineIndex],
-          isTranslating: false,
-          translation: result.translated_content
-        };
-        setSubtitleLines(newSubtitleLines);
+      // const newSubtitleLines = [...subtitleLines];
+      // const lineIndex = newSubtitleLines.findIndex(line => line.id === result.index);
+      // if (lineIndex !== -1) {
+      //   // newSubtitleLines[lineIndex] = {
+      //   //   ...newSubtitleLines[lineIndex],
+      //   //   isTranslating: false,
+      //   //   translation: result.translated_content
+      //   // };
+      //   // setSubtitleLines(newSubtitleLines);
 
+      //   const allTranslated = newSubtitleLines.every(line => !line.isTranslating);
+      //   if (allTranslated) {
+      //     editorRef.current?.handleAllTranslationsComplete();
+      //   }
+
+      // }
+      setSubtitleLines((prev)=>{
+        const newSubtitleLines = [...prev];
+        const lineIndex = newSubtitleLines.findIndex(line => line.id === result.index);
+        if (lineIndex !== -1) {
+          newSubtitleLines[lineIndex] = {
+            ...newSubtitleLines[lineIndex],
+            isTranslating: false,
+            translation: result.translated_content
+          };
+        }
         const allTranslated = newSubtitleLines.every(line => !line.isTranslating);
         if (allTranslated) {
           editorRef.current?.handleAllTranslationsComplete();
         }
-
-      }
+        return newSubtitleLines;
+      });
     }
     window.electron.ipcRenderer.on('on-translated', listener)
     // 清理函数，避免内存泄漏
