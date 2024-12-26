@@ -459,27 +459,29 @@ const SubtitleEditor = forwardRef<SubtitleEditorRef, SubtitleEditorProps>(({
                     >
                       {showTranslation && line.translation ? line.translation : line.text}
                     </div>
-                    {!showTranslation && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onTranslateLine?.(line.id);
-                          setShowTranslation(true);
-                        }}
-                        className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 text-gray-400 hover:text-green-500 rounded-full hover:bg-gray-100"
-                        title={line.translation ? "重新翻译" : "翻译此条"}
-                      >
-                        <LanguageIcon className="w-5 h-5" />
-                        {line.isTranslating && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-                          </div>
-                        )}
-                      </button>
-                    )}
                   </div>
                 )}
               </div>
+
+              {!showTranslation && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTranslateLine?.(line.id);
+                    setShowTranslation(true);
+                  }}
+                  className="absolute right-8 top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 text-gray-400 hover:text-green-500 rounded-full hover:bg-gray-100"
+                  title={line.translation ? "重新翻译" : "翻译此条"}
+                >
+                  <LanguageIcon className="w-5 h-5" />
+                  {line.isTranslating && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                </button>
+              )}
+
               <button
                 onClick={(e) => {
                   e.stopPropagation();

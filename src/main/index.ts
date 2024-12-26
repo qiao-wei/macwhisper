@@ -78,9 +78,9 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  const apiKey =  process.env.OPENAI_API_KEY
-  const model = "Baichuan4-Air";
-  const llmBaseUrl = "https://api.baichuan-ai.com/v1"
+  const apiKey : string =  process.env.OPENAI_API_KEY || "";
+  const model : string = "Baichuan4-Air";
+  const llmBaseUrl : string = "https://api.baichuan-ai.com/v1"
   const llmService: LLMService = new LikeOpenAIService(llmBaseUrl, apiKey, model);
 
   ipcMain.on('translate-text', async (event, { texts, language, concurrency }: { texts: any[], language: string, concurrency: number }) => {
@@ -108,6 +108,11 @@ app.whenReady().then(() => {
     console.log("translatet finished")
   });
 
+  ipcMain.on('merge-srt', (event, { srtFiles }) => {
+    console.log('Received message:', srtFiles);
+    // 使用ffmpeg合并字幕文件进视频
+
+  });
   // 监听 whisper 事件，接收数据
   ipcMain.on('transcribe-audio', (event, { modelSize, audioFile, language, isUseGPU }) => {
     // console.log('Received message:', audioFile);

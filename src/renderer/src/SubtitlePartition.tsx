@@ -82,7 +82,7 @@ function SubtitlePartition({ subtitleLines, setSubtitleLines }: SubtitlePageProp
       const nextLine = newSubtitleLines[Math.min(newSubtitleLines.length - 1, newIndex)];
 
       let startTime = "00:00:00.000";
-      let endTime = "00:00:05.000";
+      let endTime = "00:00:00.000";
 
       if (prevLine && nextLine) {
         const prevEndTime = prevLine.endTime;
@@ -91,10 +91,12 @@ function SubtitlePartition({ subtitleLines, setSubtitleLines }: SubtitlePageProp
         endTime = nextStartTime;
       } else if (prevLine) {
         startTime = prevLine.endTime;
-        endTime = calculateEndTime(startTime, "00:00:05.000");
+        endTime = prevLine.endTime;
+        // endTime = calculateEndTime(startTime, "00:00:05.000");
       } else if (nextLine) {
         endTime = nextLine.startTime;
-        startTime = calculateStartTime(endTime, "00:00:05.000");
+        startTime = nextLine.startTime;
+        // startTime = calculateStartTime(endTime, "00:00:05.000");
       }
 
       const newLine = {
